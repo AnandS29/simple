@@ -19,20 +19,20 @@ class A1_controller:
     """
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 30}
 
-    def __init__(self, k_x=1, k_y=1, k_v=1, k_phi=1, k_w=1):
+    def __init__(self, weights=[1, 1, 1, 1, 1]):
 
         #position gain
-        self.k_x = k_x
-        self.k_y = k_y
+        self.k_x = weights[0]
+        self.k_y = weights[1]
 
         #speed gain
-        self.k_v = k_v
+        self.k_v = weights[2]
 
         #angle gain
-        self.k_phi = k_phi
+        self.k_phi = weights[3]
 
         #anglular speed gain 
-        self.k_w = k_w
+        self.k_w = weights[4]
 
         # self.phi_hat = 0
         # self.alpha = alpha

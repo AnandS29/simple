@@ -5,6 +5,10 @@ from spline import Spline
 import matplotlib
 import matplotlib.pyplot as plt
 import pdb
+from dubins_controller import *
+from dubins_env import *
+from a1_controller import *
+from a1_env import *
 
 def make_model(layer_sizes):
     layers = []
@@ -138,8 +142,22 @@ def collect_trajs(model, env, controller, params, i):
             x0s.append(obs)
             points = find_points(task, params)
             points_set.append(points)
+
             deltas = model(model_input(task, obs, params))*params["model_scale"]*(min(1, 2*(i+1)/params["iterations"]))
-            task_adj = points + deltas
+
+            task_deltas = deltas[:2*params["points_per_sec"]*params["horizon"]]
+
+            if params["learn_weights"]:
+                controller_deltas = deltas[2*params["points_per_sec"]*params["horizon"]:]
+                if params["env"] == "car":
+                    weights = torch.tensor(params["dubins_controller_weights"], dtype=torch.float)
+                    controller = Dubins_controller(weights + controller_deltas)
+                elif params["env"] == "a1":
+                    weights = torch.tensor(params["a1_controller_weights"], dtype=torch.float)
+                    controller = A1_controller(weights + controller_deltas)
+
+            task_adj = points + task_deltas
+
             spline = Spline(task_adj[:params["horizon"]*params["points_per_sec"]], task_adj[params["horizon"]*params["points_per_sec"]:], times=output_times, init_pos=obs)
             traj = []
             k = 0

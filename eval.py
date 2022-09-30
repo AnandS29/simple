@@ -20,17 +20,19 @@ matplotlib.rcParams.update({'font.size': 8})
 def evaluate_once(model, params, v=None, theta=None):
 
 	if params["env"] == "car":
-		weights = params["dubins_controller_weights"]
+		weights = torch.tensor(params["dubins_controller_weights"], dtype=torch.float)
 		coeffs = params["dubins_dyn_coeffs"]
 
-		controller = Dubins_controller(k_x=weights[0], k_y=weights[1], k_v=weights[2], k_phi=weights[3])
+		controller = Dubins_controller(weights)
+		dum_controller = Dubins_controller(weights)
 		env = Dubins_env(total_time=params["horizon"], dt=params["dt"], f_v=coeffs[0], f_phi=coeffs[1], scale=coeffs[2], v0=coeffs[3], phi0=coeffs[4])
 		dum_env = Dubins_env(total_time=params["horizon"], dt=params["dt"], f_v=coeffs[0], f_phi=coeffs[1], scale=coeffs[2], v0=coeffs[3], phi0=coeffs[4])
 
 	elif params["env"] == "a1":
-		weights = params["a1_controller_weights"]
+		weights = torch.tensor(params["a1_controller_weights"], dtype=torch.float)
 
-		controller = A1_controller(k_x=weights[0], k_y=weights[1], k_v=weights[2], k_phi=weights[3], k_w=weights[4])
+		controller = A1_controller(weights)
+		dum_controller = A1_controller(weights)
 		env = A1GymEnv(total_time=params["horizon"], dt=params["dt"])
 		dum_env = A1GymEnv(total_time=params["horizon"], dt=params["dt"])
 		# env = A1_env(total_time=params["horizon"], dt=params["dt"])
@@ -61,8 +63,24 @@ def evaluate_once(model, params, v=None, theta=None):
 	task = generate_traj(params["horizon"], params["traj_noise"], v, theta)
 	task_points = find_points(task, params)
 
-	deltas = model(model_input(task, obs, params))*params["model_scale"]
-	task_adj = task_points + deltas
+
+	deltas = model(model_input(task, x0, params))*params["model_scale"]
+
+	task_deltas = deltas[:2*params["points_per_sec"]*params["horizon"]]
+
+	print("Output: ", task_deltas)
+
+	if params["learn_weights"]:
+		controller_deltas = deltas[2*params["points_per_sec"]*params["horizon"]:]
+		if params["env"] == "car":
+			weights = torch.tensor(params["dubins_controller_weights"], dtype=torch.float)
+			controller = Dubins_controller(weights + controller_deltas)
+		elif params["env"] == "a1":
+			weights = torch.tensor(params["a1_controller_weights"], dtype=torch.float)
+			controller = A1_controller(weights + controller_deltas)
+
+	task_adj = task_points + task_deltas
+
 	spline = Spline(task_adj[:params["horizon"]*params["points_per_sec"]], task_adj[params["horizon"]*params["points_per_sec"]:], times=output_times, init_pos=x0)
 	task_spline = Spline(task[:params["horizon"]], task[params["horizon"]:], init_pos=x0)
 	dum_task_spline = Spline(task[:params["horizon"]], task[params["horizon"]:], init_pos=dum_obs)
@@ -88,7 +106,7 @@ def evaluate_once(model, params, v=None, theta=None):
 	for t in np.arange(0, params["horizon"] + params["dt"], params["dt"]):
 		if (i % params["controller_stride"] == 0):
 			u, des_pos, act_pos= controller.next_action(t, spline, obs)
-			dum_u, _, dum_pos = controller.next_action(t, dum_task_spline, dum_obs)
+			dum_u, _, dum_pos = dum_controller.next_action(t, dum_task_spline, dum_obs)
 			des_x.append(des_pos[0].detach().item())
 			des_y.append(des_pos[1].detach().item())
 			tar_pos_x, tar_pos_y = task_spline.evaluate(t, der=0)
@@ -128,7 +146,7 @@ def evaluate(path, model_name, save_fig):
 	with open(os.path.join(path, 'params.json')) as json_file:
 		params = json.load(json_file)
 
-	eval_values = [[0.4, -0.3], [0.4, 0.3], [0.4, 0.01]]
+	eval_values = [[3, 1.5], [3, 1.5], [0.4, 0.01]]
 
 	for i in range(trials):
 		v, theta = eval_values[i]

@@ -18,17 +18,17 @@ class Dubins_controller:
     """
     metadata = {"render.modes": ["human", "rgb_array"], "video.frames_per_second": 30}
 
-    def __init__(self, k_x=1, k_y=1, k_v=1, k_phi=1):
+    def __init__(self, weights=[1, 1, 1, 1]):
 
         #position gain
-        self.k_x = k_x
-        self.k_y = k_y
+        self.k_x = weights[0]
+        self.k_y = weights[1]
 
         #speed gain
-        self.k_v = k_v
+        self.k_v = weights[2]
 
         #angle gain
-        self.k_phi = k_phi
+        self.k_phi = weights[3]
 
     """
     @params
@@ -80,9 +80,9 @@ class Dubins_controller:
 
 if __name__=="__main__":
     horizon = 3
-    env = Dubins_env(total_time=horizon, f_v=0.5, f_phi=0.25, v0=0.25, phi0=np.pi)
-    controller = Dubins_controller(3, 3, 3, 3)
-    params = generate_traj(horizon, 0, [1, 5], [-1.5, 1.5])
+    env = Dubins_env(total_time=horizon, dt=0.01, f_v=0.5, f_phi=0.25, v0=0, phi0=0)
+    controller = Dubins_controller([3, 3, 3, 3])
+    params = generate_traj(horizon, 0, [3, 3], [1.5, 1.5])
 
     cs = Spline(params[:horizon], params[horizon:])
 
