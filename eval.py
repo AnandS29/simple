@@ -135,7 +135,7 @@ def evaluate_once(model, params, v=None, theta=None):
 
 def evaluate(path, model_name, save_fig):
 
-	trials = 2
+	trials = 3
 
 	fig, ax = plt.subplots(trials, 2, sharex="row", sharey="row", figsize=(12, 9))
 
@@ -146,11 +146,12 @@ def evaluate(path, model_name, save_fig):
 	with open(os.path.join(path, 'params.json')) as json_file:
 		params = json.load(json_file)
 
-	eval_values = [[3, 1.5], [3, 1.5], [0.4, 0.01]]
+	#eval_values = [[0.5, 0.15], [0.5, -0.15], [0.4, 0.01]]
+	#eval_values = [[None, None], [None, -None], [None, None]]
 
 	for i in range(trials):
-		v, theta = eval_values[i]
-		des, act, tar, dum, dum_tar, loss, task_points, task_adj, x0, dum_x0 = evaluate_once(model, params, v, theta)
+		#v, theta = eval_values[i]
+		des, act, tar, dum, dum_tar, loss, task_points, task_adj, x0, dum_x0 = evaluate_once(model, params)#, v, theta)
 		smart_loss_avg += loss[0] / trials
 		dum_loss_avg += loss[1] / trials
 

@@ -80,9 +80,9 @@ class Dubins_controller:
 
 if __name__=="__main__":
     horizon = 3
-    env = Dubins_env(total_time=horizon, dt=0.01, f_v=0.5, f_phi=0.25, v0=0, phi0=0)
+    env = Dubins_env(total_time=horizon, dt=0.002, f_v=0.5, f_phi=0.25, v0=0, phi0=0)
     controller = Dubins_controller([3, 3, 3, 3])
-    params = generate_traj(horizon, 0, [3, 3], [1.5, 1.5])
+    params = generate_traj(horizon, 0, [1, 5], [1.5, 1.5])
 
     cs = Spline(params[:horizon], params[horizon:])
 
