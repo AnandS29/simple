@@ -23,9 +23,9 @@ from a1_learning_hierarchical.motion_imitation.envs.a1_env import A1GymEnv
 ######################### PARAMETER STUFF ######################
 parser = argparse.ArgumentParser()
 parser.add_argument('--run_name', '-n', type=str, default=None)
-parser.add_argument('--env', type=str, default="car")
-parser.add_argument('--horizon', type=int, default=3)
-parser.add_argument('--points_per_sec', type=int, default=2) # number of points the neural net adjusts (evenly spaced in time)
+parser.add_argument('--env', type=str, default="a1")
+parser.add_argument('--horizon', type=int, default=5)
+parser.add_argument('--points_per_sec', type=int, default=1) # number of points the neural net adjusts (evenly spaced in time)
 parser.add_argument('--trajs', '-t', type=int, default=10)
 parser.add_argument('--iterations', type=int, default=200)
 parser.add_argument('--lr', type=float, default=1e-3)
@@ -45,8 +45,8 @@ parser.add_argument('--a1_warm_up_vel', type=list, default=[0.3, 0.5])
 
 ## A1 feasible traj have speed 0.1 to 1.5 and angle -0.15 to 0.15
 ## Car can do anything
-parser.add_argument('--traj_v_range', type=list, default=[1, 5]) #velocity range for generated trajectories
-parser.add_argument('--traj_theta_range', type=list, default=[-1.5, 1.5]) #theta range for generated trajectories
+parser.add_argument('--traj_v_range', type=list, default=[0.3, 0.5]) #velocity range for generated trajectories
+parser.add_argument('--traj_theta_range', type=list, default=[-0.15, 0.15]) #theta range for generated trajectories
 parser.add_argument('--traj_noise', type=float, default=0) #noise added to selected points (pulled from uniform [-noise, noise])
 
 parser.add_argument('--model_scale', type=float, default=1)
@@ -67,7 +67,8 @@ if log:
     logdir = os.path.join(LOG_PATH, log)
     board_logdir = os.path.join(BOARD_LOG_PATH, log)
 
-    open(os.path.join(logdir, "loss_log.txt"), "w+")
+    with open(os.path.join(logdir, "loss_log.txt"), "w+") as file:
+        pass
 
     if params["overwrite"]:
         if os.path.exists(board_logdir):
