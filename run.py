@@ -32,8 +32,8 @@ parser.add_argument('--lr', type=float, default=1e-2)
 parser.add_argument('--dt', type=float, default=0.01)
 parser.add_argument('--input_weight', type=float, default=0) #weight on input in cost function
 parser.add_argument('--loss_stride', type=float, default=5) # number of simulation steps before adding cost to loss again
-parser.add_argument('--terminal_weight', type=float, default=250) 
-parser.add_argument('--controller_stride', type=float, default=5)
+parser.add_argument('--terminal_weight', type=float, default=1) 
+parser.add_argument('--controller_stride', type=float, default=1)
 parser.add_argument('--learn_weights', type=bool, default=False)
 
 parser.add_argument('--dubins_controller_weights', type=list, default=[3, 3, 3, 3])
@@ -140,9 +140,9 @@ for i in prog_bar:
         def f(x,u,t): 
             return f_nominal(x,u,params["dt"]) + dyn[t][2] - f_nominal(dyn[t][0],dyn[t][1],params["dt"]).detach()
 
-        deltas = model(model_input(task, x0, params))*params["model_scale"]*(min(1, 2*(i+1)/params["iterations"]))
+        deltas = model(model_input(task, x0, params))*params["model_scale"]#*(min(1, 2*(i+1)/params["iterations"]))
 
-        task_deltas = deltas[:2*params["points_per_sec"]*params["horizon"]]
+        task_deltas = deltas#[:2*params["points_per_sec"]*params["horizon"]]
 
         if params["learn_weights"]:
             controller_deltas = deltas[2*params["points_per_sec"]*params["horizon"]:]
@@ -198,7 +198,6 @@ if log:
         json.dump(params, outfile)
     # with open(os.path.join(logdir, "best_model_iter.txt"), "w+") as outfile:
     #     outfile.write(str(best_iter))
-    print("Best Iteration: ", best_iter)
 
 
 
