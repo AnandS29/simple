@@ -25,19 +25,19 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--run_name', '-n', type=str, default=None)
 parser.add_argument('--env', type=str, default="car")
 parser.add_argument('--horizon', type=int, default=3)
-parser.add_argument('--points_per_sec', type=int, default=1) # number of points the neural net adjusts (evenly spaced in time)
+parser.add_argument('--points_per_sec', type=int, default=2) # number of points the neural net adjusts (evenly spaced in time)
 parser.add_argument('--trajs', '-t', type=int, default=10)
-parser.add_argument('--iterations', type=int, default=20)
-parser.add_argument('--lr', type=float, default=1e-3)
-parser.add_argument('--dt', type=float, default=0.002)
+parser.add_argument('--iterations', type=int, default=200)
+parser.add_argument('--lr', type=float, default=1e-2)
+parser.add_argument('--dt', type=float, default=0.01)
 parser.add_argument('--input_weight', type=float, default=0) #weight on input in cost function
-parser.add_argument('--loss_stride', type=float, default=10) # number of simulation steps before adding cost to loss again
+parser.add_argument('--loss_stride', type=float, default=5) # number of simulation steps before adding cost to loss again
 parser.add_argument('--terminal_weight', type=float, default=250) 
-parser.add_argument('--controller_stride', type=float, default=10)
+parser.add_argument('--controller_stride', type=float, default=5)
 parser.add_argument('--learn_weights', type=bool, default=False)
 
 parser.add_argument('--dubins_controller_weights', type=list, default=[3, 3, 3, 3])
-parser.add_argument('--dubins_dyn_coeffs', type=list, default=[0.5, 0.25, 0.95, 0, 0]) #friction on v, phi, scale on inputs, init v between [0, v0] and phi between [-phi0, phi0]
+parser.add_argument('--dubins_dyn_coeffs', type=list, default=[0.5, 0.25, 0.95, 0.5, 0.5]) #friction on v, phi, scale on inputs, init v between [0, v0] and phi between [-phi0, phi0]
 
 parser.add_argument('--a1_controller_weights', type=list, default=[3, 3, 5, 5, 15]) #x, y, v, phi, w, alpha
 parser.add_argument('--a1_warm_up_time', type=float, default=2)
@@ -49,7 +49,7 @@ parser.add_argument('--traj_v_range', type=list, default=[1, 5]) #velocity range
 parser.add_argument('--traj_theta_range', type=list, default=[-2, 2]) #theta range for generated trajectories
 parser.add_argument('--traj_noise', type=float, default=0) #noise added to selected points (pulled from uniform [-noise, noise])
 
-parser.add_argument('--model_scale', type=float, default=1)
+parser.add_argument('--model_scale', type=float, default=2.5)
 parser.add_argument('--save_every', type=float, default=10) #save model every # iterations
 parser.add_argument('--overwrite', '-o', action="store_true") #save model every # iterations
 
@@ -124,7 +124,6 @@ output_times = np.linspace(0, params["horizon"], params["points_per_sec"]*params
 optimizer = optim.Adam(model.parameters(), lr=params["lr"])
 
 best_loss = np.inf
-best_iter = 0
 prog_bar = trange(params["iterations"], leave=True)
 for i in prog_bar:
 
@@ -174,11 +173,8 @@ for i in prog_bar:
         writer.add_scalar("Loss/Train", loss_avg, i)
 
         if (i % params["save_every"] == 0) and (i != 0):
-            print("Saved Model with Loss {}".format(loss_avg))
             torch.save(model, os.path.join(logdir, "model_{}.pt".format(i)))
             if loss_avg < best_loss:
-                print("New best!")
-                best_iter = i
                 torch.save(model, os.path.join(logdir, "best_model.pt"))
                 best_loss = loss_avg
 
@@ -196,7 +192,6 @@ if log:
     writer.close()
     loss_file.close()
     if loss_avg < best_loss:
-        best_iter = i
         torch.save(model, os.path.join(logdir, "best_model.pt"))
     torch.save(model, os.path.join(logdir, "final_model.pt"))
     with open(os.path.join(logdir, "params.json"), "a+") as outfile:
