@@ -23,11 +23,11 @@ from a1_learning_hierarchical.motion_imitation.envs.a1_env import A1GymEnv
 ######################### PARAMETER STUFF ######################
 parser = argparse.ArgumentParser()
 parser.add_argument('--run_name', '-n', type=str, default=None)
-parser.add_argument('--env', type=str, default="a1")
-parser.add_argument('--horizon', type=int, default=5)
+parser.add_argument('--env', type=str, default="car")
+parser.add_argument('--horizon', type=int, default=3)
 parser.add_argument('--points_per_sec', type=int, default=1) # number of points the neural net adjusts (evenly spaced in time)
 parser.add_argument('--trajs', '-t', type=int, default=10)
-parser.add_argument('--iterations', type=int, default=200)
+parser.add_argument('--iterations', type=int, default=20)
 parser.add_argument('--lr', type=float, default=1e-3)
 parser.add_argument('--dt', type=float, default=0.002)
 parser.add_argument('--input_weight', type=float, default=0) #weight on input in cost function
@@ -45,8 +45,8 @@ parser.add_argument('--a1_warm_up_vel', type=list, default=[0.3, 0.5])
 
 ## A1 feasible traj have speed 0.1 to 1.5 and angle -0.15 to 0.15
 ## Car can do anything
-parser.add_argument('--traj_v_range', type=list, default=[0.3, 0.5]) #velocity range for generated trajectories
-parser.add_argument('--traj_theta_range', type=list, default=[-0.15, 0.15]) #theta range for generated trajectories
+parser.add_argument('--traj_v_range', type=list, default=[1, 5]) #velocity range for generated trajectories
+parser.add_argument('--traj_theta_range', type=list, default=[-2, 2]) #theta range for generated trajectories
 parser.add_argument('--traj_noise', type=float, default=0) #noise added to selected points (pulled from uniform [-noise, noise])
 
 parser.add_argument('--model_scale', type=float, default=1)
@@ -67,9 +67,6 @@ if log:
     logdir = os.path.join(LOG_PATH, log)
     board_logdir = os.path.join(BOARD_LOG_PATH, log)
 
-    with open(os.path.join(logdir, "loss_log.txt"), "w+") as file:
-        pass
-
     if params["overwrite"]:
         if os.path.exists(board_logdir):
             shutil.rmtree(board_logdir)
@@ -77,6 +74,7 @@ if log:
             shutil.rmtree(logdir)
 
     os.mkdir(logdir)
+    loss_file = open(os.path.join(logdir, "loss.txt"), "w+")
     writer = SummaryWriter(log_dir=board_logdir)
 
 
@@ -172,9 +170,7 @@ for i in prog_bar:
     # Checkpoint
     loss_avg = loss.item() / (params["trajs"])
     if log: 
-        with open(os.path.join(logdir, "loss.txt"), "a") as loss_file:
-            loss_file.write(str(loss_avg) + "\n")
-
+        loss_file.write(str(loss_avg) + "\n")
         writer.add_scalar("Loss/Train", loss_avg, i)
 
         if (i % params["save_every"] == 0) and (i != 0):
@@ -198,11 +194,12 @@ for i in prog_bar:
 ########################### FINAL LOGGING STUFF ###########################
 if log:
     writer.close()
+    loss_file.close()
     if loss_avg < best_loss:
         best_iter = i
         torch.save(model, os.path.join(logdir, "best_model.pt"))
     torch.save(model, os.path.join(logdir, "final_model.pt"))
-    with open(os.path.join(logdir, "params.json"), "w+") as outfile:
+    with open(os.path.join(logdir, "params.json"), "a+") as outfile:
         json.dump(params, outfile)
     # with open(os.path.join(logdir, "best_model_iter.txt"), "w+") as outfile:
     #     outfile.write(str(best_iter))
