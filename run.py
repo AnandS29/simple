@@ -67,6 +67,8 @@ if log:
     logdir = os.path.join(LOG_PATH, log)
     board_logdir = os.path.join(BOARD_LOG_PATH, log)
 
+    open(os.path.join(logdir, "loss_log.txt"), "w+")
+
     if params["overwrite"]:
         if os.path.exists(board_logdir):
             shutil.rmtree(board_logdir)
@@ -169,6 +171,9 @@ for i in prog_bar:
     # Checkpoint
     loss_avg = loss.item() / (params["trajs"])
     if log: 
+        with open(os.path.join(logdir, "loss.txt"), "a") as loss_file:
+            loss_file.write(str(loss_avg) + "\n")
+
         writer.add_scalar("Loss/Train", loss_avg, i)
 
         if (i % params["save_every"] == 0) and (i != 0):
