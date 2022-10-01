@@ -140,9 +140,9 @@ for i in prog_bar:
         def f(x,u,t): 
             return f_nominal(x,u,params["dt"]) + dyn[t][2] - f_nominal(dyn[t][0],dyn[t][1],params["dt"]).detach()
 
-        deltas = model(model_input(task, x0, params))*params["model_scale"]#*(min(1, 2*(i+1)/params["iterations"]))
+        deltas = model(model_input(task, x0, params))*params["model_scale"]*(min(1, 2*(i+1)/params["iterations"]))
 
-        task_deltas = deltas#[:2*params["points_per_sec"]*params["horizon"]]
+        task_deltas = deltas[:2*params["points_per_sec"]*params["horizon"]]
 
         if params["learn_weights"]:
             controller_deltas = deltas[2*params["points_per_sec"]*params["horizon"]:]
