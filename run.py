@@ -28,7 +28,7 @@ parser.add_argument('--horizon', type=int, default=3)
 parser.add_argument('--points_per_sec', type=int, default=2) # number of points the neural net adjusts (evenly spaced in time)
 parser.add_argument('--trajs', '-t', type=int, default=5)
 parser.add_argument('--iterations', type=int, default=200)
-parser.add_argument('--lr', type=float, default=1e-3)
+parser.add_argument('--lr', type=float, default=5e-4)
 parser.add_argument('--dt', type=float, default=0.01)
 parser.add_argument('--input_weight', type=float, default=0) #weight on input in cost function
 parser.add_argument('--loss_stride', type=float, default=5) # number of simulation steps before adding cost to loss again
@@ -37,7 +37,7 @@ parser.add_argument('--controller_stride', type=float, default=1)
 parser.add_argument('--learn_weights', type=bool, default=False)
 
 parser.add_argument('--dubins_controller_weights', type=list, default=[3, 3, 3, 3])
-parser.add_argument('--dubins_dyn_coeffs', type=list, default=[0.5, 0.25, 0.95, 0.5, 0.5]) #friction on v, phi, scale on inputs, init v between [0, v0] and phi between [-phi0, phi0]
+parser.add_argument('--dubins_dyn_coeffs', type=list, default=[0.5, 0.25, 0.95, 0.25, 0.25]) #friction on v, phi, scale on inputs, init v between [0, v0] and phi between [-phi0, phi0]
 
 parser.add_argument('--a1_controller_weights', type=list, default=[3, 3, 5, 5, 15]) #x, y, v, phi, w, alpha
 parser.add_argument('--a1_warm_up_time', type=float, default=2)
@@ -139,7 +139,10 @@ for i in prog_bar:
         def f(x,u,t): 
             return f_nominal(x,u,params["dt"]) + dyn[t][2] - f_nominal(dyn[t][0],dyn[t][1],params["dt"]).detach()
 
-        deltas = model(model_input(task, x0, params))*params["model_scale"]*(min(1, 2*(i+1)/params["iterations"]))
+        if params["env"] == "car":
+            deltas = model(model_input(task, x0, params))*params["model_scale"]
+        elif params["env"] == "a1":
+            deltas = model(model_input(task, x0, params))*params["model_scale"]*(min(1, 2*(i+1)/params["iterations"]))
 
         task_deltas = deltas[:2*params["points_per_sec"]*params["horizon"]]
 
