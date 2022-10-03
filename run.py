@@ -26,9 +26,9 @@ parser.add_argument('--run_name', '-n', type=str, default=None)
 parser.add_argument('--env', type=str, default="car")
 parser.add_argument('--horizon', type=int, default=3)
 parser.add_argument('--points_per_sec', type=int, default=2) # number of points the neural net adjusts (evenly spaced in time)
-parser.add_argument('--trajs', '-t', type=int, default=5)
-parser.add_argument('--iterations', type=int, default=200)
-parser.add_argument('--lr', type=float, default=5e-4)
+parser.add_argument('--trajs', '-t', type=int, default=10)
+parser.add_argument('--iterations', type=int, default=100)
+parser.add_argument('--lr', type=float, default=1e-3)
 parser.add_argument('--dt', type=float, default=0.01)
 parser.add_argument('--input_weight', type=float, default=0) #weight on input in cost function
 parser.add_argument('--loss_stride', type=float, default=5) # number of simulation steps before adding cost to loss again
@@ -45,8 +45,8 @@ parser.add_argument('--a1_warm_up_vel', type=list, default=[0.3, 0.5])
 
 ## A1 feasible traj have speed 0.1 to 1.5 and angle -0.15 to 0.15
 ## Car can do anything
-parser.add_argument('--traj_v_range', type=list, default=[1, 5]) #velocity range for generated trajectories
-parser.add_argument('--traj_theta_range', type=list, default=[-2, 2]) #theta range for generated trajectories
+parser.add_argument('--traj_v_range', type=list, default=[2, 4]) #velocity range for generated trajectories
+parser.add_argument('--traj_theta_range', type=list, default=[-1.75, 1.75]) #theta range for generated trajectories
 parser.add_argument('--traj_noise', type=float, default=0) #noise added to selected points (pulled from uniform [-noise, noise])
 
 parser.add_argument('--model_scale', type=float, default=2.5)
@@ -139,10 +139,7 @@ for i in prog_bar:
         def f(x,u,t): 
             return f_nominal(x,u,params["dt"]) + dyn[t][2] - f_nominal(dyn[t][0],dyn[t][1],params["dt"]).detach()
 
-        if params["env"] == "car":
-            deltas = model(model_input(task, x0, params))*params["model_scale"]
-        elif params["env"] == "a1":
-            deltas = model(model_input(task, x0, params))*params["model_scale"]*(min(1, 2*(i+1)/params["iterations"]))
+        deltas = model(model_input(task, x0, params))*params["model_scale"]*(min(1, 2*(i+1)/params["iterations"]))
 
         task_deltas = deltas[:2*params["points_per_sec"]*params["horizon"]]
 

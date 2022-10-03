@@ -143,10 +143,7 @@ def collect_trajs(model, env, controller, params, i):
             points = find_points(task, params)
             points_set.append(points)
 
-            if params["env"] == "car":
-                deltas = model(model_input(task, obs, params))*params["model_scale"]
-            elif params["env"] == "a1":
-                deltas = model(model_input(task, obs, params))*params["model_scale"]*(min(1, 2*(i+1)/params["iterations"]))
+            deltas = model(model_input(task, obs, params))*params["model_scale"]*(min(1, 2*(i+1)/params["iterations"]))
 
             task_deltas = deltas[:2*params["points_per_sec"]*params["horizon"]]
 
