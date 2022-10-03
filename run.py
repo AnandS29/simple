@@ -39,14 +39,15 @@ parser.add_argument('--learn_weights', type=bool, default=False)
 parser.add_argument('--dubins_controller_weights', type=list, default=[3, 3, 3, 3])
 parser.add_argument('--dubins_dyn_coeffs', type=list, default=[0.5, 0.25, 0.95, 0, 0]) #friction on v, phi, scale on inputs, init v between [0, v0] and phi between [-phi0, phi0]
 
-parser.add_argument('--a1_controller_weights', type=list, default=[3, 3, 5, 5, 15]) #x, y, v, phi, w, alpha
+parser.add_argument('--a1_controller_weights', type=list, default=[2, 2, 5, 2, 5])
+#parser.add_argument('--a1_controller_weights', type=list, default=[3, 3, 5, 5, 15]) #x, y, v, phi, w, alpha
 parser.add_argument('--a1_warm_up_time', type=float, default=2)
 parser.add_argument('--a1_warm_up_vel', type=list, default=[0.3, 0.5])
 
 ## A1 feasible traj have speed 0.1 to 1.5 and angle -0.15 to 0.15
 ## Car can do anything
-parser.add_argument('--traj_v_range', type=list, default=[0.3, 0.6]) #velocity range for generated trajectories
-parser.add_argument('--traj_theta_range', type=list, default=[-0.4, 0.4]) #theta range for generated trajectories
+parser.add_argument('--traj_v_range', type=list, default=[0.3, 0.5]) #velocity range for generated trajectories
+parser.add_argument('--traj_theta_range', type=list, default=[-0.5, 0.5]) #theta range for generated trajectories
 parser.add_argument('--traj_noise', type=float, default=0) #noise added to selected points (pulled from uniform [-noise, noise])
 
 parser.add_argument('--model_scale', type=float, default=1)
@@ -114,7 +115,7 @@ else:
 # Input: [x0, x1, ..., y0, y1, ..., v0, phi0]
 # Output: Deltas on the above
 # make_model in helper.py
-model = make_model([num_input_states, 32, 32, num_output_states])
+model = make_model([num_input_states, 64, 64, num_output_states])
 
 #Times the model affects
 output_times = np.linspace(0, params["horizon"], params["points_per_sec"]*params["horizon"] + 1)
